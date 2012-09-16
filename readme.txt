@@ -10,6 +10,7 @@ Fixes rewrites for non-Big Endian date permastructs
 == Description ==
 
 ## DATES BY ENDIANNESS ## 
+
 (http://{SITE}/{DATE}/hello-world/)
 
 Regardless of your post permastruct, date archives are generated. 
