@@ -1,4 +1,4 @@
-=== Audio ===
+=== Big, Middle, and Little Endians ===
 Contributors: wonderboymusic
 Tags: rewrite, date, permalinks
 Requires at least: 3.0
