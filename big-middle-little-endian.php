@@ -4,18 +4,18 @@ Plugin Name: Big, Middle, and Little Endians
 Plugin URI: http://wordpress.org/extend/plugins/big-middle-little-endian/
 Author: Scott Taylor
 Author URI: http://scotty-t.com
-Version: 0.1
+Version: 0.2
 Description: Fixes rewrites for non-Big Endian date permastructs
 */
 
 /**
- * - - - - - - 
- * CONFIRMED 
- * - - - - - - 
+ * - - - - - -
+ * CONFIRMED
+ * - - - - - -
  *  !!! = Doesn't work without this plugin
  * ----------------
  * Big Endian in both directions
- * 
+ *
  * 2012/09/12 yyyy/mm/dd
  * 2012/09 yyyy/mm
  * 2012 yyyy
@@ -23,15 +23,15 @@ Description: Fixes rewrites for non-Big Endian date permastructs
  * 09/12 mm/dd !!!
  * ----------------
  * Reverse of Middle Endian in both directions
- * 
+ *
  * 2012/12/09 yyyy/dd/mm
  * 2012/09 yyyy/mm !!! ~ matches day
  * 2012 yyyyy
- * 09 mm !!! 
+ * 09 mm !!!
  * 12/09 dd/mm !!!
  * ----------------
  * Middle Endian in both directions
- * 
+ *
  * 09/12/2012 mm/dd/yyyy
  * 09/12 mm/dd
  * 09 mm
@@ -39,21 +39,21 @@ Description: Fixes rewrites for non-Big Endian date permastructs
  * 09/2012 mm/yyyy !!!
  * ----------------
  * Little Endian in both directions
- * 
+ *
  * 12/09/2012 dd/mm/yyyy
  * 12/09 dd/yy
  * 12 dd
  * 2012 yyyy !!!
  * 09/2012 mm/yyyy !!!
  * ----------------
- * 
+ *
  * Translated:
- * 
+ *
  * Year and Month archives don't work when you date format is Middle or Little Endian.
  * Year archives work in Middle when reversed (reversed, why not), but months do not.
- * 
+ *
  * This plugin makes all date formats work regardless of endianness.
- * 
+ *
  */
 
 register_activation_hook( __FILE__, 'flush_rewrite_rules' );
@@ -62,49 +62,49 @@ register_deactivation_hook( __FILE__, 'flush_rewrite_rules' );
 class BigMiddleLittleEndian {
 	/**
 	 * Stores reference to Big Endian permastruct (%year%/%monthnum%/%day%)
-	 * 
-	 * @var string 
-	 */
-	var $big_endian;
-	/**
-	 * Actual matching date permastruct
-	 * 
+	 *
 	 * @var string
 	 */
-	var $rewrite_endian;
+	public $big_endian;
+	/**
+	 * Actual matching date permastruct
+	 *
+	 * @var string
+	 */
+	public $rewrite_endian;
 	/**
 	 * All available date endians
-	 * 
+	 *
 	 * @var array
 	 */
-	var $endians;
+	public $endians;
 	/**
 	 * Re-generated date rewrite rules
-	 * 
+	 *
 	 * @var array
 	 */
-	var $rules;
+	public $rules;
 	/**
 	 * Plugin instance
-	 * 
+	 *
 	 * @var BigMiddleLittleEndian
 	 */
 	static $instance;
 	/**
 	 * Singleton accessor
-	 * 
+	 *
 	 * @return BigMiddleLittleEndian
 	 */
 	public static function get_instance() {
 		if ( ! isset( self::$instance ) )
 			self::$instance = new BigMiddleLittleEndian;
-		
+
 		return self::$instance;
 	}
-	
+
 	/**
 	 * Filters and properties
-	 * 
+	 *
 	 */
 	private function __construct() {
 		$this->endians = array(
@@ -114,49 +114,49 @@ class BigMiddleLittleEndian {
 			'little'	=> '%day%/%monthnum%/%year%'
 		);
 		$this->big_endian = $this->endians['big'];
-		
+
 		add_action( 'init', array( $this, 'tags' ) );
 		add_filter( 'date_rewrite_rules', array( $this, 'rewrite_rules' ) );
 		add_filter( 'rewrite_rules_array', array( $this, 'remove_overrides' ) );
 	}
-	
+
 	/**
 	 * Eventually, support 1-365 Julian date format, and week number (1-52) as a date format
-	 * 
+	 *
 	 */
-	function tags() {
+	public function tags() {
 		// TODO: this doesn't work yet
 		add_rewrite_tag( '%week%', '([0-9]{1,2})', 'week' );
-		add_rewrite_tag( '%julian%', '([0-9]{1,3})', 'julian' );		
+		add_rewrite_tag( '%julian%', '([0-9]{1,3})', 'julian' );
 	}
 	/**
 	 * Determine endianness of date permastruct
-	 * 
+	 *
 	 * @global WP_Rewrite $wp_rewrite
 	 * @return string
 	 */
-	function get_date_endian() {
+	public function get_date_endian() {
 		global $wp_rewrite;
-		
+
 		if ( isset( $this->rewrite_endian ) )
 			return $this->rewrite_endian;
-		
+
 		foreach ( $this->endians as $struct ) {
 			if ( false !== strpos( $wp_rewrite->permalink_structure, $struct ) ) {
 				$this->rewrite_endian = $struct;
 				return $this->rewrite_endian;
 			}
 		}
-		
+
 		return $this->big_endian;
-	}	
+	}
 	/**
 	 * return date permastruct from Rewrite's permastruct
-	 * 
+	 *
 	 * @global WP_Rewrite $wp_rewrite
 	 * @return string
 	 */
-	function get_date_permastruct() {
+	public function get_date_permastruct() {
 		global $wp_rewrite;
 
 		if ( empty( $wp_rewrite->permalink_structure ) ) {
@@ -180,35 +180,35 @@ class BigMiddleLittleEndian {
 		$wp_rewrite->date_structure = $front . $this->get_date_endian();
 
 		return $wp_rewrite->date_structure;
-	}		
+	}
 	/**
 	 * Post rewrites will wipe out date rewrites (they are generated before, but loaded after)
 	 * Override them with our fixed rewrites
-	 * 
+	 *
 	 * @param array $rules
 	 * @return array
 	 */
-	function remove_overrides( $rules ) {
+	public function remove_overrides( $rules ) {
 		foreach ( $this->rules as $match => $query )
 			$rules[$match] = $query;
-		
+
 		return $rules;
 	}
-	
+
 	/**
 	 * We're gonna fix core... move along, nothing to see here...
-	 * 
+	 *
 	 * Strip all of the unnecessary code out of WP_Rewrite::generate_rewrite_rules()
 	 * and focus it on our custom date endian permastructs
-	 * 
+	 *
 	 * @global WP_Rewrite $wp_rewrite
 	 * @return array
 	 */
-	function rewrite_rules() {
+	public function rewrite_rules() {
 		global $wp_rewrite;
-		
+
 		$permalink_structure = $this->get_date_permastruct();
-		
+
 		//build a regex to match the feed section of URLs, something like (feed|atom|rss|rss2)/?
 		$feedregex2 = '';
 		foreach ( (array) $wp_rewrite->feeds as $feed_name )
@@ -238,40 +238,40 @@ class BigMiddleLittleEndian {
 
 		$index = $wp_rewrite->index; //probably 'index.php'
 		$feedindex = $index;
-				
+
 		foreach ( $this->endians as $date_struct ) {
 			if ( $this->get_date_endian() === $date_struct ) {
 				$sets = array();
 				$tags = explode( '/', $this->get_date_endian() );
 				// match the first tag
 				$sets[] = array( reset( $tags ) ); // y or m or d
-				
+
 				// match practical combinations
 				if ( '%year%' === reset( $tags ) ) {
 					if ( $this->rewrite_endian === $this->big_endian )
 						$sets[] = array( '%day%' );
 					else
 						$sets[] = array( '%monthnum%' );
-					$sets[] = array_diff( $tags, array( '%day%' ) ); // y and m 
-					$sets[] = array_diff( $tags, array( '%year%' ) ); // m and d		
+					$sets[] = array_diff( $tags, array( '%day%' ) ); // y and m
+					$sets[] = array_diff( $tags, array( '%year%' ) ); // m and d
 				} elseif ( '%monthnum%' === reset( $tags ) ) {
 					$sets[] = array( '%year%' );
 					$sets[] = array_diff( $tags, array( '%year%' ) ); // m and d
 					$sets[] = array_diff( $tags, array( '%day%' ) ); // m and y
 				} elseif ( '%day%' === reset( $tags ) ) {
 					$sets[] = array( '%year%' );
-					$sets[] = array_diff( $tags, array( '%year%' ) ); // d and m	
+					$sets[] = array_diff( $tags, array( '%year%' ) ); // d and m
 					$sets[] = array_diff( $tags, array( '%day%' ) ); // d and y
 				}
-				
+
 				// match all 3 tags
 				$sets[] = $tags;
 				break;
 			}
 		}
-		
+
 		$sets = array_map( 'array_values', $sets );
-		
+
 		$dirs = array();
 		foreach ( $sets as $tokens ) {
 			if ( '%year%' === reset( $tokens ) && in_array( '%day%', $tokens ) && ! in_array( '%monthnum%', $tokens ) ) {
@@ -279,17 +279,17 @@ class BigMiddleLittleEndian {
 				// month archive, not a day archive, the RegEx won't work for manth AND day
 				$tokens = array( '%year%', '%monthnum%' );
 			}
-			
+
 			$dirs[] = join( '/', $tokens );
-			
+
 			$parts = array();
 			foreach ( $tokens as $i => $token ) {
 				$parts[] = str_replace( $wp_rewrite->rewritecode, $wp_rewrite->queryreplace, $token ) . $wp_rewrite->preg_index( $i + 1 );
 			}
 
 			$queries[] = join( '&', $parts );
-		}	
-		
+		}
+
 		//get the structure, minus any cruft (stuff that isn't tags) at the front
 		$structure = $permalink_structure;
 		if ( $front != '/' )
@@ -299,8 +299,8 @@ class BigMiddleLittleEndian {
 		//so for example, a $structure of /%year%/%monthnum%/%postname% would create
 		//rewrite rules for /%year%/, /%year%/%monthnum%/ and /%year%/%monthnum%/%postname%
 		$structure = trim( $structure, '/' );
-		$num_dirs = count( $dirs );		
-		
+		$num_dirs = count( $dirs );
+
 		//strip slashes from the front of $front
 		$front = preg_replace( '|^/|', '', $front );
 
@@ -317,10 +317,10 @@ class BigMiddleLittleEndian {
 
 			//make a list of tags, and store how many there are in $num_toks
 			$num_toks = preg_match_all( '#%[^/]+%#', $struct, $toks );
-			
+
 			//get the 'tagname=$matches[i]'
 			$query = $queries[$j];
-			
+
 			//set up $ep_mask_specific which is used to match more specific URL types
 			switch ( $dirs[$j] ) {
 				case '%year%':
@@ -348,10 +348,10 @@ class BigMiddleLittleEndian {
 			$feedmatch2 = $match . $feedregex2;
 
 			//start creating the array of rewrites for this dir
-			$rewrite = array( 
-				$feedmatch => $feedquery, 
-				$feedmatch2 => $feedquery, 
-				$pagematch => $pagequery 
+			$rewrite = array(
+				$feedmatch => $feedquery,
+				$feedmatch2 => $feedquery,
+				$pagematch => $pagequery
 			);
 
 			//do endpoints
@@ -380,7 +380,7 @@ class BigMiddleLittleEndian {
 				//not matching a permalink so this is a lot simpler
 				//close the match and finalise the query
 				$match .= '?$';
-				$query = $index . '?' . $query;		
+				$query = $index . '?' . $query;
 
 				//create the final array for this dir by joining the $rewrite array (which currently
 				//only contains rules/queries for trackback, pages etc) to the main regex/query for
@@ -390,9 +390,9 @@ class BigMiddleLittleEndian {
 			//add the rules for this dir to the accumulating $post_rewrite
 			$post_rewrite = array_merge( $rewrite, $post_rewrite );
 		} //foreach ( $dir)
-		
+
 		$this->rules = $post_rewrite;
 		return $post_rewrite; //the finished rules. phew!
-	}	
+	}
 }
 BigMiddleLittleEndian::get_instance();
