@@ -4,7 +4,7 @@ Plugin Name: Big, Middle, and Little Endians
 Plugin URI: http://wordpress.org/extend/plugins/big-middle-little-endian/
 Author: Scott Taylor
 Author URI: http://scotty-t.com
-Version: 0.2
+Version: 0.3
 Description: Fixes rewrites for non-Big Endian date permastructs
 */
 
@@ -395,4 +395,5 @@ class BigMiddleLittleEndian {
 		return $post_rewrite; //the finished rules. phew!
 	}
 }
-BigMiddleLittleEndian::get_instance();
+
+add_action( 'plugins_loaded', array( 'BigMiddleLittleEndian', 'get_instance' ) );

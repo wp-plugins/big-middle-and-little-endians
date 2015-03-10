@@ -3,7 +3,7 @@ Contributors: wonderboymusic
 Tags: rewrite, date, permalinks
 Requires at least: 3.0
 Tested up to: 4.1
-Stable Tag: trunk
+Stable Tag: 0.3
 
 Fixes rewrites for non-Big Endian date permastructs
 
